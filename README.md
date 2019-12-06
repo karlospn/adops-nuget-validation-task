@@ -6,7 +6,7 @@ It was done following these guidelines:
 
 These task do the following actions:
 
-- **Validates your solution is using the same nuget versions in all the projects.**
+1 - **Validates your solution is using the same nuget versions in all the projects.**
 
 For example: 
 Let's say you have a solution with 2 projects. XXX.WebApi and XXX.Business
@@ -15,7 +15,7 @@ Let's say you have a solution with 2 projects. XXX.WebApi and XXX.Business
 The task throws an error telling you that there are not matching versions in you solution
 
 
-- **Validates your solution is not using prerelease nuget version.**
+2 - **Validates your solution is not using prerelease nuget version.**
 
 For example:
 Let's say you have a solution with 1 project: XXX.WebApi
@@ -24,7 +24,7 @@ The task throws an error. That validation can be overriden with an input.
 If you check the allowPreReleaseNugets flag these validation is not going to be checked
 
 
-- **Validates that your solution is not using any not whitelisted nuget.**
+3 - **Validates that your solution is not using any not whitelisted nuget.**
 
 - These validations obtains a whitelist from an Azure Devops repository and validates that your solution is using only whitelisted nugets.
 - The Azure Devops repository from which the task obtains the whitelist is hardcoded inside the task.
