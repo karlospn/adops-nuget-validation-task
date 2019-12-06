@@ -29,7 +29,7 @@ If you check the allowPreReleaseNugets flag these validation is not going to be 
 3 - **Validates that your solution is not using any not whitelisted nuget.**
 
 - These validations obtains a whitelist from an Azure Devops repository and validates that your solution is using only whitelisted nugets.
-- The Azure Devops repository from which the task obtains the whitelist is hardcoded inside the task.
+- The Azure Devops repository from which the task obtains the whitelist is hardcoded inside the task. If you want to use in your Azure Devops pipelines change it
 
 - The whitelist has these format:
 
@@ -57,6 +57,10 @@ These whitelist is telling the following information. Allow the following nugets
   - But if the nuget is "Microsoft.NetCore.App" allow only to use version 2.2.0
 - All nugets that start with Serilog.* allow to use versions 2.8.x and 2.9.x
 
+
+#Deployment
+
+The repository contains an azure-pipelines.yaml for a continous build and deployment of these task.
 
 
 
