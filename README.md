@@ -1,6 +1,9 @@
 # adops-nuget-validation-task
 
 This repository contains an azure devops custom pipelines task.
+
+# Usage
+
 It was done following these guidelines:
 - https://docs.microsoft.com/en-us/azure/devops/extend/develop/add-build-task?view=azure-devops
 
@@ -58,9 +61,10 @@ These whitelist is telling the following information. Allow the following nugets
 - All nugets that start with Serilog.* allow to use versions 2.8.x and 2.9.x
 
 
-#Deployment
+# Deployment
 
 The repository contains an azure-pipelines.yaml for a continous build and deployment of these task.
+
 
 
 
