@@ -12,6 +12,7 @@ For example:
 Let's say you have a solution with 2 projects. XXX.WebApi and XXX.Business
 - XXX.WebApi has installed Autofac 4.9.4
 - XXX.Business has installed 4.9.0
+
 The task throws an error telling you that there are not matching versions in you solution
 
 
@@ -19,7 +20,8 @@ The task throws an error telling you that there are not matching versions in you
 
 For example:
 Let's say you have a solution with 1 project: XXX.WebApi
-- XXX.WebApi uses Serilog 2.9.1-dev-01154
+- XXX.WebApi uses Serilog 2.9.1-dev-01154.
+
 The task throws an error. That validation can be overriden with an input.
 If you check the allowPreReleaseNugets flag these validation is not going to be checked
 
