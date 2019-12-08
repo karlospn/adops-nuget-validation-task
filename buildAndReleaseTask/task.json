@@ -1,0 +1,30 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Microsoft/azure-pipelines-task-lib/master/tasks.schema.json",
+    "id": "dbe6e765-9bc0-49f5-9a9b-dcc75a7f663e",
+    "name": "nuget-validations",
+    "friendlyName": "Nuget validations",
+    "description": "A task for validating Nuget packages",
+    "helpMarkDown": "",
+    "category": "Utility",
+    "author": "Me",
+    "version": {
+        "Major": 0,
+        "Minor": 1,
+        "Patch": 0
+    },
+    "instanceNameFormat": "VY nuget validation",
+    "inputs": [
+        {
+            "name": "usePrereleaseNugets",
+            "type": "boolean",
+            "defaultValue": "false",
+            "label": "Suppress prerelease and beta nuget validations",
+            "required": true
+        }
+    ],
+    "execution": {
+        "Node10": {
+            "target": "index.js"
+        }
+    }
+}

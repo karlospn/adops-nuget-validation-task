@@ -1,0 +1,40 @@
+{
+    "manifestVersion": 1,
+    "id": "nuget-validations",
+    "name": "Nuget validations",
+    "version": "0.0.3",
+    "publisher": "Me",
+    "targets": [
+        {
+            "id": "Microsoft.VisualStudio.Services"
+        }
+    ],    
+    "description": "Task for validating that all nugets are compliant",
+    "categories": [
+        "Azure Pipelines"
+    ],
+    "icons": {
+        "default": "images/logo.png"        
+    },
+    "repository": {
+        "type": "git",
+        "uri": "https://carlos.visualstudio.com/Lab/_git/Whitelist.Task"
+    },
+    "files": [
+        {
+            "path": "buildAndReleaseTask"
+        }
+    ],
+    "contributions": [
+        {
+            "id": "custom-build-release-task",
+            "type": "ms.vss-distributed-task.task",
+            "targets": [
+                "ms.vss-distributed-task.tasks"
+            ],
+            "properties": {
+                "name": "buildAndReleaseTask"
+            }
+        }
+    ]
+}
