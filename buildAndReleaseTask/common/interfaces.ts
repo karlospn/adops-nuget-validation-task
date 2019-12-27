@@ -9,7 +9,7 @@ export interface nuget{
 }
 
 export interface result {
-    validations: validation[]
+    validations: validation[];
 }
 
 export interface validation{
@@ -20,5 +20,5 @@ export interface validation{
 export interface nugetCandidates{
     name: string;
     version: string[];
-    scoring: number
+    scoring: number;
 }

@@ -1,45 +1,97 @@
 import tl = require('azure-pipelines-task-lib/task');
 import { Base64 } from 'js-base64';
+import { nuget } from '../common/interfaces'
 const request = require('request-promise-native');
-import {Whitelist, nuget, validation, result, nugetCandidates} from './interfaces'
+import {Whitelist, validation, result, nugetCandidates} from '../common/interfaces'
 
 
 export class nugetValidations {
 
-    ValidateSameVersionsOnAllProjects(nugets: any[]) : validation
+    
+    async Validate(data: any, branch: any, usePrereleaseNugets: any) : Promise<result> {
+        
+        var result: result = { validations : [] };
+        tl.debug(`Begin dotnet validations`)
+        
+        if(data != undefined)
+        {
+            result.validations.push( ...this.ValidateSameVersionsOnAllProjects(data));
+            result.validations.push( ...this.ValidatePreReleaseNugets(data, branch, usePrereleaseNugets ));
+            result.validations.push( ...await this.ValidateWhiteList(data));    
+        }
+        return result;
+    }
+
+    private ValidateSameVersionsOnAllProjects(nugets: any[]) : validation[]
     {
 
         tl.debug(`Validating nuget versions`)
 
+        var result: result = { validations: [] };
+
+        var faulty_nugets : nuget[] = [];
         nugets.forEach(outer => {
-            nugets.forEach(inner =>{
+            nugets.forEach(inner => {
+                if (outer.name.toLowerCase() === inner.name.toLowerCase() && 
+                    outer.version != inner.version)
+                { 
+                    var found = false;
+                    faulty_nugets.forEach(f => {
+                        if(f.name == inner.name)
+                        {
+                            found = true;
+                            if(!f.version.some( y => y == inner.version ))
+                            {
+                                f.version.push(inner.version);
+                            }
+                        }
+                    });
 
-                if (outer.name.toLowerCase() === inner.name.toLowerCase() && outer.version != inner.version)
-                    return {isOk: false, message: `ERROR: Nuget ${outer.name} with versions ${inner.version} and ${outer.version}`};
-                
-            });
-        });        
-        return {isOk: true, message: ""};
-    }
-
-    ValidatePreReleaseNugets(nugets: any[], branch: string, usePrereleaseNugets: boolean) : validation
-    {
-        tl.debug(`Validating pre-release nugets`)
-        tl.debug(`Skip prerelease nugets activated: ${usePrereleaseNugets}`)
-
-        if(usePrereleaseNugets)
-            return {isOk: true, message: ""};
-
-        nugets.forEach(nuget => {
-            var splitted = nuget.version.split("-")
-            if(splitted.length > 1)
-                return {isOk: false, message: `ERROR: Nuget ${nuget.name} contains pre-release version ${nuget.version}`};            
+                    if(found === false)
+                    {
+                        faulty_nugets.push({
+                            name: inner.name, 
+                            version: [inner.version, outer.version]
+                        });
+                    }
+                }
+            });        
         });
 
-        return {isOk: true, message: ""};    
+        if(faulty_nugets.length > 0)
+        {
+            faulty_nugets.forEach(f => {
+                result.validations.push({
+                    isOk: false, 
+                    message: `ERROR: Found nuget ${f.name} with versions ${f.version}`});
+            });          
+        }
+        return result.validations;
     }
 
-    async ValidateWhiteList(nugets: any[]): Promise<validation>
+    private ValidatePreReleaseNugets(nugets: any[], branch: string, usePrereleaseNugets: boolean) : validation[]
+    {
+
+        tl.debug(`Validating pre-release nugets`)
+        tl.debug(`Skip prerelease nugets: ${usePrereleaseNugets}`)
+        
+        var result: result = { validations: [] };
+
+        if(usePrereleaseNugets)
+            return result.validations;
+
+        nugets.forEach(nuget => {
+            let regexp = new RegExp('^([0-9]{1,})\.([0-9]{1,})(\.([0-9]{1,}))?(\.([0-9]{1,}))?$');
+            var valid = regexp.test(nuget.version)
+            if(!valid)
+                result.validations.push({
+                    isOk: false, 
+                    message: `ERROR: Found nuget ${nuget.name} that contains pre-release version: ${nuget.version}`});            
+        });
+
+    }
+
+    private async ValidateWhiteList(nugets: any[]): Promise<validation[]>
     {
         tl.debug(`Validating Whitelist`)
 
@@ -51,6 +103,8 @@ export class nugetValidations {
             throw  new Error("Empty or malformed manifest");
 
 
+        var result: result = { validations: [] };
+    
         for(var k = 0; k < nugets.length; k++)
         {
 
@@ -91,23 +145,21 @@ export class nugetValidations {
 
             if(candidates_list.length == 0)
             {
-                return {isOk: false, message: `ERROR: Nuget ${nugets[k].name} with version ${nugets[k].version} is not whitelisted`};
+                result.validations.push({isOk: false, message: `ERROR: Found nuget ${nugets[k].name} with version ${nugets[k].version} is not in the whitelist`});
             }
             else
             {
                 candidates_list.sort((a, b) => (a.scoring < b.scoring) ? 1 : -1)
                 var valid_version = this.ValidateVersion(candidates_list[0].version, nugets[k]);
                 if(!valid_version) 
-                    return {isOk: false, message: `ERROR: nuget ${nugets[k].name} with version ${nugets[k].version} is not whitelisted`};
-
+                    result.validations.push({isOk: false, message: `ERROR: Found nuget ${nugets[k].name} with version ${nugets[k].version} is not in the whitelist`});
             }
-
         }
-        return {isOk: true, message: ""};
+        return result.validations;
     }
 
 
-    ValidateVersion(whitelisted_versions: string[], nuget: any)
+    private ValidateVersion(whitelisted_versions: string[], nuget: any)
     {
         if(whitelisted_versions === undefined)
             return true;
@@ -144,7 +196,7 @@ export class nugetValidations {
         }
     }
 
-    getSystemAccessToken(): string {
+    private getSystemAccessToken(): string {
         tl.debug('Getting credentials for local feeds');
         let auth = tl.getEndpointAuthorization('SYSTEMVSSCONNECTION', false);
         if (auth!.scheme === 'OAuth') {
@@ -155,7 +207,7 @@ export class nugetValidations {
         }
     }
 
-    async GetWhitelistAsync() {
+    private async GetWhitelistAsync() {
         
         tl.debug(`Calling Azure DevOps Api`)
         let accessToken = this.getSystemAccessToken()

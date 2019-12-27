@@ -1,82 +1,62 @@
 import tl = require('azure-pipelines-task-lib/task');
 import path = require("path");
-import { internal } from './internal'
-import {nugetValidations } from './nugetValidations'
-import {Whitelist, nuget, validation, result} from './interfaces'
-const parseXml = require('xml-parser');
+import {dotnetValidations} from './dotnet/dotnetValidations'
+import {result, validation} from './common/interfaces'
+
 
 
 export class main{
 
     private usePrereleaseNugets: boolean;
-    private projects: string[] = ["**/packages.config", "**/*.props"];
-    private data: any[] = [];
     private readonly buildSourceBranch: string = "Build.SourceBranch"; 
-
 
     constructor(){
         this.usePrereleaseNugets = tl.getBoolInput("usePrereleaseNugets", true);
     }
     
-    public async execute() {
-        try {
-                var int = new internal();
+    public async execute() 
+    {
+        try 
+        {
+            tl.debug("Starting custom nuget validations task");
 
-                tl.setResourcePath(path.join(__dirname, "task.json"));
-                var projectFiles = int.getProjectFiles(this.projects);
-
-                tl.debug(`Found the following projects: ${JSON.stringify(projectFiles)}`)
-
-                if (projectFiles.length === 0) {
-                    throw new Error("noProjectFilesFound");
-            }
-
-            var validations = new nugetValidations();
+            tl.setResourcePath(path.join(__dirname, "task.json"));
+        
+            //Commit must come from any branch
             var branch = tl.getVariable(this.buildSourceBranch) || '';
+            if(branch === '') 
+                throw  new Error("noBranchFound");
+
+            var result : result = { validations: [  ]}                       
             
-            if(branch === '') throw  new Error("noBranchFound");
-            
-            projectFiles.forEach(file => {
-                
-                tl.debug(`Parsing the following fie: ${JSON.stringify(file)}`)
+            //Dotnet validations
+            var dotnet_validations = new dotnetValidations();
+            result = await dotnet_validations.Validate(branch, this.usePrereleaseNugets);
 
-                var contents =  int.getFileContentsOrFailSync(file, { deepParse: true } )
-                const xml = parseXml(contents);
-                var data = int.parsePackagesInternal(xml);    
-                if(data.length > 0)
+            //Future validations
+                    
+            //Parse result validations
+            var found_error : boolean = false;      
+            result.validations.forEach((item : validation) => {
+                if(item.isOk === false)
                 {
-                    data.forEach(element => {
-                        this.data.push(element);
-                    });
-                }     
-                
-                tl.debug(`Found the following packages: ${JSON.stringify(data)}`)
-            });
-
-            var result: result = { validations : [] };
-            result.validations.push(validations.ValidateSameVersionsOnAllProjects(this.data));
-            result.validations.push(validations.ValidatePreReleaseNugets(this.data, branch, this.usePrereleaseNugets ));
-            result.validations.push(await validations.ValidateWhiteList(this.data));
-
-
-            result.validations.forEach(item => {
-                if(!item.isOk)
-                {
-                    tl.debug(`Validations result: ${JSON.stringify(item.message)}`)
-                    throw new Error(JSON.stringify(result.validations));
+                    tl.error(`Validation error: ${JSON.stringify(item.message)}`);
+                    found_error = true;
                 }
             });
 
-            tl.debug(`Validations result: OK`)
+            if(found_error === (true as Boolean))
+            {
+                throw new Error("Validations failed");
+            }
+
+            tl.debug(`Validations result: OK`);
 
         }
         catch (err) {
-            console.log("ERROR: " + err);
             tl.setResult(tl.TaskResult.Failed, err.message);
         }
-    }
-
-    
+    }   
 }
 
 try {

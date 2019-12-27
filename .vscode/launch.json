@@ -17,9 +17,9 @@
             ],
             "env": {
                 "INPUT_usePrereleaseNugets": "false",
-                "SYSTEM_DEFAULTWORKINGDIRECTORY": "C:\\MyTestingApp",
+                "SYSTEM_DEFAULTWORKINGDIRECTORY": "C:\\MyCode",
                 "Build_SourceBranch": "/ref/heads/master",
-                "ENDPOINT_AUTH_SYSTEMVSSCONNECTION": "{\"parameters\":{\"AccessToken\":\"SOME PAT GOES HERE\"},\"scheme\":\"OAuth\"}"
+                "ENDPOINT_AUTH_SYSTEMVSSCONNECTION": "{\"parameters\":{\"AccessToken\":\"PUT AN ADOS PAT HERE\"},\"scheme\":\"OAuth\"}"
             }
         }
     ]
